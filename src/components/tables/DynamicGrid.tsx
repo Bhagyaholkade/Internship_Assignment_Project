@@ -49,9 +49,6 @@ const renderCellByType = (
       return formatDate(value as string, columnMeta.format);
 
     case 'chiplist':
-      // BUG: This is not rendering groups correctly!
-      // The groups array contains objects with groupName, but we're not accessing it properly.
-      // TODO: Fix this to display group names as chips.
       const groups = value as Group[];
       if (!groups || groups.length === 0) {
         return <span style={{ color: '#999' }}>No groups</span>;
@@ -61,9 +58,8 @@ const renderCellByType = (
         <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
           {groups.map((group) => (
             <Chip
-              // BUG: Wrong property being used for key and label
-              key={group.toString()}
-              label={group.toString()}
+              key={group.groupId}
+              label={group.groupName}
               size="small"
               variant="outlined"
             />

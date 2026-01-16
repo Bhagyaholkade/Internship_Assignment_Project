@@ -5,7 +5,7 @@ import {
   type MRT_ColumnDef,
   type MRT_PaginationState,
 } from 'material-react-table';
-import { Chip, Box } from '@mui/material';
+import { Chip, Box, Skeleton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 import type { ColumnMetadata, User, Group } from '@/types';
 import { formatDate } from '@/utils';
 
@@ -73,6 +73,51 @@ const renderCellByType = (
 };
 
 /**
+ * Loading Skeleton Component
+ * Shows placeholder rows while data is loading
+ */
+const TableSkeleton: React.FC<{ columns: ColumnMetadata[]; rowCount?: number }> = ({
+  columns,
+  rowCount = 5
+}) => {
+  return (
+    <TableContainer component={Paper}>
+      <Table>
+        <TableHead>
+          <TableRow>
+            {columns.map((col) => (
+              <TableCell key={col.key} sx={{ width: col.width }}>
+                {col.header}
+              </TableCell>
+            ))}
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {Array.from({ length: rowCount }).map((_, rowIndex) => (
+            <TableRow key={rowIndex}>
+              {columns.map((col) => (
+                <TableCell key={col.key}>
+                  {col.type === 'badge' ? (
+                    <Skeleton variant="rounded" width={70} height={24} />
+                  ) : col.type === 'chiplist' ? (
+                    <Box sx={{ display: 'flex', gap: 0.5 }}>
+                      <Skeleton variant="rounded" width={60} height={24} />
+                      <Skeleton variant="rounded" width={80} height={24} />
+                    </Box>
+                  ) : (
+                    <Skeleton variant="text" width={col.width ? col.width * 0.7 : 100} />
+                  )}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+};
+
+/**
  * DynamicGrid Component
  *
  * A metadata-driven data grid using Material React Table.
@@ -83,6 +128,7 @@ const renderCellByType = (
  * - Custom cell renderers for different data types
  * - Server-side pagination
  * - Sorting support
+ * - Loading skeleton for better UX
  */
 export const DynamicGrid: React.FC<DynamicGridProps> = ({
   data,
@@ -92,6 +138,11 @@ export const DynamicGrid: React.FC<DynamicGridProps> = ({
   pagination,
   onPaginationChange,
 }) => {
+  // Show skeleton while loading
+  if (isLoading && data.length === 0) {
+    return <TableSkeleton columns={columns} rowCount={pagination.pageSize} />;
+  }
+
   // Generate MRT columns from metadata
   const tableColumns = useMemo<MRT_ColumnDef<User>[]>(() => {
     return columns.map((colMeta) => ({

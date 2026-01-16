@@ -14,8 +14,8 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { useSnackbar } from 'notistack';
-import { DynamicGrid, UserActions } from '@/components';
-import { useUsers, useUpdateUserStatus } from '@/hooks';
+import { DynamicGrid, UserActions, ErrorAlert } from '@/components';
+import { useUsers, useUpdateUserStatus, useDebounce } from '@/hooks';
 import { userColumnMetadata } from '@/utils';
 import type { MRT_PaginationState } from 'material-react-table';
 import type { User, ColumnMetadata } from '@/types';
@@ -65,6 +65,9 @@ export const UsersPage: React.FC = () => {
     };
   });
 
+  // Debounce search query to prevent API calls on every keystroke
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
   // Sync state changes to URL
   useEffect(() => {
     const params: Record<string, string> = {};
@@ -78,19 +81,18 @@ export const UsersPage: React.FC = () => {
     if (statusFilter !== 'all') {
       params.status = statusFilter;
     }
-    if (searchQuery) {
-      params.query = searchQuery;
+    if (debouncedSearchQuery) {
+      params.query = debouncedSearchQuery;
     }
 
     setSearchParams(params, { replace: true });
-  }, [pagination, statusFilter, searchQuery, setSearchParams]);
+  }, [pagination, statusFilter, debouncedSearchQuery, setSearchParams]);
 
-  // Fetch users - BUG: Search is not debounced!
-  // TODO: Use the useDebounce hook to debounce the search query
-  const { data, isLoading, error } = useUsers({
+  // Fetch users with debounced search query
+  const { data, isLoading, error, refetch } = useUsers({
     page: pagination.pageIndex + 1,
     pageSize: pagination.pageSize,
-    query: searchQuery, // BUG: This updates on every keystroke
+    query: debouncedSearchQuery,
     status: statusFilter,
   });
 
@@ -113,10 +115,9 @@ export const UsersPage: React.FC = () => {
     );
   };
 
-  // Handle search input change - BUG: Not debounced!
+  // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
-    // TODO: Implement debouncing to prevent API calls on every keystroke
     // Reset to first page when searching
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
@@ -155,12 +156,33 @@ export const UsersPage: React.FC = () => {
     ),
   }));
 
-  // Error state - TODO: Improve error UI
+  // Handle retry for failed requests
+  const handleRetry = () => {
+    refetch();
+  };
+
+  // Error state with retry functionality
   if (error) {
+    const isNetworkError = error.message.includes('Network') ||
+                           error.message.includes('fetch') ||
+                           error.message.includes('Failed to fetch');
+
     return (
-      <Alert severity="error" sx={{ mt: 2 }}>
-        Failed to load users: {error.message}
-      </Alert>
+      <Box>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Users
+        </Typography>
+        <ErrorAlert
+          title={isNetworkError ? 'Connection Error' : 'Failed to Load Users'}
+          message={
+            isNetworkError
+              ? 'Unable to connect to the server. Please check your internet connection and try again.'
+              : `Something went wrong while loading users: ${error.message}`
+          }
+          onRetry={handleRetry}
+          showRetry={true}
+        />
+      </Box>
     );
   }
 

@@ -45,31 +45,45 @@ import type { User, ColumnMetadata } from '@/types';
  * 3. No error boundary or proper error UI.
  */
 export const UsersPage: React.FC = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { enqueueSnackbar } = useSnackbar();
 
-  // Local state for filters
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
-  const [pagination, setPagination] = useState<MRT_PaginationState>({
-    pageIndex: 0,
-    pageSize: 10,
+  // Initialize state from URL params (read once on mount)
+  const [searchQuery, setSearchQuery] = useState(() => {
+    return searchParams.get('query') || '';
+  });
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>(() => {
+    const status = searchParams.get('status');
+    return (status as 'all' | 'active' | 'inactive') || 'all';
+  });
+  const [pagination, setPagination] = useState<MRT_PaginationState>(() => {
+    const page = searchParams.get('page');
+    const pageSize = searchParams.get('pageSize');
+    return {
+      pageIndex: page ? parseInt(page) - 1 : 0,
+      pageSize: pageSize ? parseInt(pageSize) : 10,
+    };
   });
 
-  // BUG #3: URL params are read but not used properly
-  // This effect runs AFTER initial render, causing the pagination to reset
+  // Sync state changes to URL
   useEffect(() => {
-    const page = searchParams.get('page');
-    const status = searchParams.get('status');
+    const params: Record<string, string> = {};
 
-    if (page) {
-      // BUG: This runs after initial data fetch, causing a flicker
-      setPagination((prev) => ({ ...prev, pageIndex: parseInt(page) - 1 }));
+    if (pagination.pageIndex > 0) {
+      params.page = String(pagination.pageIndex + 1);
     }
-    if (status) {
-      setStatusFilter(status as 'all' | 'active' | 'inactive');
+    if (pagination.pageSize !== 10) {
+      params.pageSize = String(pagination.pageSize);
     }
-  }, [searchParams]);
+    if (statusFilter !== 'all') {
+      params.status = statusFilter;
+    }
+    if (searchQuery) {
+      params.query = searchQuery;
+    }
+
+    setSearchParams(params, { replace: true });
+  }, [pagination, statusFilter, searchQuery, setSearchParams]);
 
   // Fetch users - BUG: Search is not debounced!
   // TODO: Use the useDebounce hook to debounce the search query
@@ -111,14 +125,11 @@ export const UsersPage: React.FC = () => {
   const handleStatusFilterChange = (value: 'all' | 'active' | 'inactive') => {
     setStatusFilter(value);
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-    // BUG: URL is not updated when filter changes
   };
 
   // Handle pagination change
   const handlePaginationChange = (newPagination: MRT_PaginationState) => {
     setPagination(newPagination);
-    // BUG: URL is not updated when pagination changes
-    // TODO: Update URL search params when pagination changes
   };
 
   // Add actions column to metadata

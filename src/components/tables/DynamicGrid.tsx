@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo } from 'react';
 import {
   MaterialReactTable,
   useMaterialReactTable,
@@ -12,7 +12,7 @@ import { Chip, Box, Skeleton, Table, TableBody, TableCell, TableContainer, Table
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
 import type { ColumnMetadata, User, Group } from '@/types';
-import { formatDate, isAdmin, isManagement, getPrivilegeBadgeColor } from '@/utils';
+import { formatDate } from '@/utils';
 import { useTablePreferences } from '@/hooks';
 
 interface DynamicGridProps {

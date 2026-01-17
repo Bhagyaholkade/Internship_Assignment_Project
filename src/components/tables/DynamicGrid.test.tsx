@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+// Imports removed as they are not used in this test file
+import { describe, it, expect } from 'vitest';
 import type { ColumnMetadata, Group } from '@/types';
 
 // Test the renderCellByType function by extracting its logic
@@ -46,7 +46,6 @@ describe('DynamicGrid Column Rendering', () => {
     // Test string type
     it('should render string values correctly', () => {
       const value = 'John Doe';
-      const type = 'string';
       // String type just returns the value as-is
       expect(value).toBe('John Doe');
     });
@@ -60,7 +59,8 @@ describe('DynamicGrid Column Rendering', () => {
 
     it('should return correct badge color for inactive status', () => {
       const status = 'inactive';
-      const expectedColor = status === 'active' ? 'success' : 'default';
+      // Use explicit casting or flexible comparison to avoid TS2367
+      const expectedColor = (status as string) === 'active' ? 'success' : 'default';
       expect(expectedColor).toBe('default');
     });
 
@@ -97,7 +97,6 @@ describe('DynamicGrid Column Rendering', () => {
     // Test date formatting
     it('should handle date values', () => {
       const dateValue = '2023-07-21';
-      const format = 'YYYY-MM-DD';
       // Date should be formatted according to format
       expect(dateValue).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     });
@@ -106,10 +105,7 @@ describe('DynamicGrid Column Rendering', () => {
   describe('Skeleton Loading', () => {
     it('should generate correct number of skeleton rows', () => {
       const rowCount = 5;
-      const columns: ColumnMetadata[] = [
-        { key: 'name', header: 'Name', type: 'string' },
-        { key: 'status', header: 'Status', type: 'badge' },
-      ];
+
 
       const skeletonRows = Array.from({ length: rowCount });
       expect(skeletonRows.length).toBe(5);
@@ -148,12 +144,6 @@ describe('DynamicGrid Column Rendering', () => {
     });
 
     it('should allow hiding columns except name', () => {
-      const columns: ColumnMetadata[] = [
-        { key: 'name', header: 'Name', type: 'string' },
-        { key: 'email', header: 'Email', type: 'string' },
-        { key: 'status', header: 'Status', type: 'badge' },
-      ];
-
       const canHide = (key: string) => key !== 'name';
 
       expect(canHide('name')).toBe(false);

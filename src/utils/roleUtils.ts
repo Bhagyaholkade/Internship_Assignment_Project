@@ -1,4 +1,4 @@
-import type { User, Group } from '@/types';
+import type { User } from '@/types';
 
 /**
  * Role-based utility functions

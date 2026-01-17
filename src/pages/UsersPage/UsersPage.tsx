@@ -9,13 +9,12 @@ import {
   Select,
   MenuItem,
   Paper,
-  Alert,
   InputAdornment,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { useSnackbar } from 'notistack';
 import { DynamicGrid, UserActions, ErrorAlert } from '@/components';
-import { useUsers, useUpdateUserStatus, useDebounce } from '@/hooks';
+import { useUsers, useUpdateUserStatus, useDebounce, useInvalidateUsersCache } from '@/hooks';
 import { userColumnMetadata } from '@/utils';
 import type { MRT_PaginationState } from 'material-react-table';
 import type { User, ColumnMetadata } from '@/types';
@@ -70,26 +69,31 @@ export const UsersPage: React.FC = () => {
 
   // Sync state changes to URL
   useEffect(() => {
-    const params: Record<string, string> = {};
+    const params = new URLSearchParams();
 
     if (pagination.pageIndex > 0) {
-      params.page = String(pagination.pageIndex + 1);
+      params.set('page', String(pagination.pageIndex + 1));
     }
     if (pagination.pageSize !== 10) {
-      params.pageSize = String(pagination.pageSize);
+      params.set('pageSize', String(pagination.pageSize));
     }
     if (statusFilter !== 'all') {
-      params.status = statusFilter;
+      params.set('status', statusFilter);
     }
-    if (debouncedSearchQuery) {
-      params.query = debouncedSearchQuery;
+    if (searchQuery) { // Sync the immediate search query to URL for persistence
+      params.set('query', searchQuery);
     }
 
     setSearchParams(params, { replace: true });
-  }, [pagination, statusFilter, debouncedSearchQuery, setSearchParams]);
+  }, [pagination.pageIndex, pagination.pageSize, statusFilter, searchQuery, setSearchParams]);
+
+  // Reset to first page when debounced search query or status filter changes
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  }, [debouncedSearchQuery, statusFilter]);
 
   // Fetch users with debounced search query
-  const { data, isLoading, error, refetch } = useUsers({
+  const { data, isLoading, isFetching, error, refetch } = useUsers({
     page: pagination.pageIndex + 1,
     pageSize: pagination.pageSize,
     query: debouncedSearchQuery,
@@ -100,13 +104,16 @@ export const UsersPage: React.FC = () => {
   const { mutate: updateStatus, isPending: isUpdating } = useUpdateUserStatus();
 
   // Handle status toggle
+  const { invalidateAll } = useInvalidateUsersCache();
+
   const handleToggleStatus = (userId: string, newStatus: 'active' | 'inactive') => {
     updateStatus(
       { userId, status: newStatus },
       {
         onSuccess: (response) => {
           enqueueSnackbar(response.message, { variant: 'success' });
-          // BUG: Table doesn't refresh after this!
+          // FIX: Invalidate queries to refresh the table
+          invalidateAll();
         },
         onError: () => {
           enqueueSnackbar('Failed to update user status', { variant: 'error' });
@@ -118,8 +125,6 @@ export const UsersPage: React.FC = () => {
   // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
-    // Reset to first page when searching
-    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
   // Handle status filter change
@@ -164,8 +169,8 @@ export const UsersPage: React.FC = () => {
   // Error state with retry functionality
   if (error) {
     const isNetworkError = error.message.includes('Network') ||
-                           error.message.includes('fetch') ||
-                           error.message.includes('Failed to fetch');
+      error.message.includes('fetch') ||
+      error.message.includes('Failed to fetch');
 
     return (
       <Box>
@@ -243,6 +248,7 @@ export const UsersPage: React.FC = () => {
           data={usersWithActions}
           columns={columnsWithActions}
           isLoading={isLoading}
+          isFetching={isFetching}
           totalCount={data?.data?.totalCount || 0}
           pagination={pagination}
           onPaginationChange={handlePaginationChange}

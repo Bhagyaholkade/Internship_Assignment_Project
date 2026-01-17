@@ -19,6 +19,7 @@ interface DynamicGridProps {
   data: User[];
   columns: ColumnMetadata[];
   isLoading?: boolean;
+  isFetching?: boolean;
   totalCount: number;
   pagination: MRT_PaginationState;
   onPaginationChange: (pagination: MRT_PaginationState) => void;
@@ -94,7 +95,7 @@ const renderCellByType = (
             return (
               <Tooltip
                 key={group.groupId}
-                title={group.roles.length > 0
+                title={group.roles?.length > 0
                   ? `Roles: ${group.roles.map(r => r.roleName).join(', ')}`
                   : 'No specific roles'
                 }
@@ -186,6 +187,7 @@ export const DynamicGrid: React.FC<DynamicGridProps> = ({
   data,
   columns,
   isLoading = false,
+  isFetching = false,
   totalCount,
   pagination,
   onPaginationChange,
@@ -249,7 +251,7 @@ export const DynamicGrid: React.FC<DynamicGridProps> = ({
 
   const table = useMaterialReactTable({
     columns: tableColumns,
-    data: isLoading && data.length === 0 ? [] : data, // Pass empty array during initial load
+    data: (isLoading || isFetching) && data.length === 0 ? [] : data, // Pass empty array during initial load or refetch
     enableRowSelection: false,
     enableColumnFilters: false,
     enableGlobalFilter: false,
@@ -286,7 +288,7 @@ export const DynamicGrid: React.FC<DynamicGridProps> = ({
   });
 
   // Show skeleton while loading (after all hooks have been called)
-  if (isLoading && data.length === 0) {
+  if ((isLoading || isFetching) && data.length === 0) {
     return <TableSkeleton columns={columns} rowCount={pagination.pageSize} />;
   }
 

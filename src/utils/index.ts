@@ -1,4 +1,15 @@
 export { userColumnMetadata } from './columnConfig';
+export {
+  isAdmin,
+  isManagement,
+  isInGroup,
+  hasRole,
+  getAllRoles,
+  getPrivilegeLevel,
+  getPrivilegeBadgeColor,
+  canPerformAction,
+} from './roleUtils';
+export type { PrivilegeLevel } from './roleUtils';
 
 /**
  * Format date string to readable format

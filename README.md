@@ -45,10 +45,20 @@ This project started with intentional bugs and incomplete features. Here is a su
 3.  **URL Synchronization**: Implemented bidirectional sync between URL parameters and table state (pagination, filters, search) using `useSearchParams`.
 
 ### 🚀 Feature Enhancements
-1.  **Debounced Search**: Implemented a custom `useDebounce` hook to optimize API calls, preventing excessive network requests during typing.
-2.  **Loading Skeletons**: Added a visual skeleton loader to `DynamicGrid` for a smoother user experience during data fetching.
-3.  **Build Optimization**: Resolved TypeScript strict mode compilation errors by cleaning up unused imports and fixing type mismatches in test files.
-4.  **UI Polish**: Added "Internship Assignment (Bhagya)" to the navbar for personalization.
+1.  **Debounced Search**: Implemented a custom `useDebounce` hook to optimize API calls.
+2.  **Loading Skeletons**: Added a visual skeleton loader to `DynamicGrid` for better UX.
+3.  **Enhanced Actions Column**:
+    *   Added **hover states** for interactive feedback.
+    *   Implemented a **confirmation dialog** before deactivating users to prevent accidental actions.
+    *   Ensured **accessibility** with `aria-labels` and keyboard navigation support.
+4.  **Robust Error Handling**:
+    *   Integrated `ErrorBoundary` to catch and display user-friendly error messages.
+    *   Added **retry mechanisms** for failed network requests.
+5.  **Bonus Features Implemented**:
+    *   **State Persistence (Bonus A)**: Column visibility and sorting preferences are saved to `localStorage`.
+    *   **Unit Tests (Bonus B)**: Comprehensive testing for `useDebounce` hook and table rendering logic.
+    *   **Role-Based UI (Bonus C)**: Visual indicators (badges/icons) based on user roles (Admin, Management).
+6.  **Build Optimization**: Resolved TypeScript strict mode compilation errors.
 
 ---
 

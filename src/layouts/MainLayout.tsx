@@ -24,7 +24,7 @@ export const MainLayout: React.FC = () => {
             Admin Dashboard
           </Typography>
           <Typography variant="body2" sx={{ opacity: 0.8 }}>
-            Internship Assignment
+            Internship Assignment (Bhagya)
           </Typography>
         </Toolbar>
       </AppBar>

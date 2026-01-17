@@ -246,6 +246,7 @@ export const UsersPage: React.FC = () => {
           totalCount={data?.data?.totalCount || 0}
           pagination={pagination}
           onPaginationChange={handlePaginationChange}
+          tableId="users-table"
         />
       </Paper>
     </Box>

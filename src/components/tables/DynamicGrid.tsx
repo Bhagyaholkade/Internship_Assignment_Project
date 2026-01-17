@@ -1,13 +1,19 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import {
   MaterialReactTable,
   useMaterialReactTable,
   type MRT_ColumnDef,
   type MRT_PaginationState,
+  type MRT_SortingState,
+  type MRT_VisibilityState,
+  type MRT_DensityState,
 } from 'material-react-table';
-import { Chip, Box, Skeleton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
+import { Chip, Box, Skeleton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Tooltip } from '@mui/material';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
 import type { ColumnMetadata, User, Group } from '@/types';
-import { formatDate } from '@/utils';
+import { formatDate, isAdmin, isManagement, getPrivilegeBadgeColor } from '@/utils';
+import { useTablePreferences } from '@/hooks';
 
 interface DynamicGridProps {
   data: User[];
@@ -17,6 +23,7 @@ interface DynamicGridProps {
   pagination: MRT_PaginationState;
   onPaginationChange: (pagination: MRT_PaginationState) => void;
   onRowAction?: (user: User, action: string) => void;
+  tableId?: string; // Unique ID for persisting preferences
 }
 
 /**
@@ -54,16 +61,61 @@ const renderCellByType = (
         return <span style={{ color: '#999' }}>No groups</span>;
       }
 
+      // Check for special groups and assign colors
+      const getGroupColor = (groupName: string): 'error' | 'warning' | 'info' | 'secondary' | 'success' | 'default' => {
+        const name = groupName.toLowerCase();
+        if (name.includes('admin')) return 'error';        // Red
+        if (name.includes('management')) return 'warning'; // Orange
+        if (name.includes('content')) return 'info';       // Blue
+        if (name.includes('standard')) return 'secondary'; // Purple
+        if (name.includes('read only')) return 'success';  // Green for Read Only
+        return 'default';
+      };
+
+      // Get icon for special groups
+      const getGroupIcon = (groupName: string) => {
+        const name = groupName.toLowerCase();
+        if (name.includes('admin')) {
+          return <AdminPanelSettingsIcon sx={{ fontSize: 16, mr: 0.5 }} />;
+        }
+        if (name.includes('management')) {
+          return <SupervisorAccountIcon sx={{ fontSize: 16, mr: 0.5 }} />;
+        }
+        return null;
+      };
+
       return (
         <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-          {groups.map((group) => (
-            <Chip
-              key={group.groupId}
-              label={group.groupName}
-              size="small"
-              variant="outlined"
-            />
-          ))}
+          {groups.map((group) => {
+            const color = getGroupColor(group.groupName);
+            const icon = getGroupIcon(group.groupName);
+            const isSpecial = color !== 'default'; // All colored chips are special
+
+            return (
+              <Tooltip
+                key={group.groupId}
+                title={group.roles.length > 0
+                  ? `Roles: ${group.roles.map(r => r.roleName).join(', ')}`
+                  : 'No specific roles'
+                }
+                arrow
+              >
+                <Chip
+                  icon={icon || undefined}
+                  label={group.groupName}
+                  size="small"
+                  color={color}
+                  variant={isSpecial ? 'filled' : 'outlined'}
+                  sx={{
+                    fontWeight: isSpecial ? 600 : 400,
+                    '& .MuiChip-icon': {
+                      color: 'inherit',
+                    },
+                  }}
+                />
+              </Tooltip>
+            );
+          })}
         </Box>
       );
 
@@ -137,13 +189,19 @@ export const DynamicGrid: React.FC<DynamicGridProps> = ({
   totalCount,
   pagination,
   onPaginationChange,
+  tableId = 'default-table',
 }) => {
-  // Show skeleton while loading
-  if (isLoading && data.length === 0) {
-    return <TableSkeleton columns={columns} rowCount={pagination.pageSize} />;
-  }
+  // Load persisted preferences from localStorage
+  // IMPORTANT: All hooks must be called before any conditional returns
+  const {
+    preferences,
+    updateColumnVisibility,
+    updateSorting,
+    updateDensity,
+  } = useTablePreferences(tableId);
 
   // Generate MRT columns from metadata
+  // Must be called before conditional return to maintain hook order
   const tableColumns = useMemo<MRT_ColumnDef<User>[]>(() => {
     return columns.map((colMeta) => ({
       accessorKey: colMeta.key,
@@ -151,6 +209,7 @@ export const DynamicGrid: React.FC<DynamicGridProps> = ({
       size: colMeta.width,
       enableSorting: colMeta.sorting ?? false,
       enablePinning: !!colMeta.pinned,
+      enableHiding: colMeta.key !== 'name', // Name column can't be hidden
       Cell: ({ cell }) => {
         const value = cell.getValue();
         return renderCellByType(value, colMeta);
@@ -158,27 +217,65 @@ export const DynamicGrid: React.FC<DynamicGridProps> = ({
     }));
   }, [columns]);
 
+  // Handle column visibility change and persist
+  const handleColumnVisibilityChange = (
+    updater: MRT_VisibilityState | ((old: MRT_VisibilityState) => MRT_VisibilityState)
+  ) => {
+    const newVisibility = typeof updater === 'function'
+      ? updater(preferences.columnVisibility as MRT_VisibilityState)
+      : updater;
+    updateColumnVisibility(newVisibility);
+  };
+
+  // Handle sorting change and persist
+  const handleSortingChange = (
+    updater: MRT_SortingState | ((old: MRT_SortingState) => MRT_SortingState)
+  ) => {
+    const newSorting = typeof updater === 'function'
+      ? updater(preferences.sorting as MRT_SortingState)
+      : updater;
+    updateSorting(newSorting);
+  };
+
+  // Handle density change and persist
+  const handleDensityChange = (
+    updater: MRT_DensityState | ((old: MRT_DensityState) => MRT_DensityState)
+  ) => {
+    const newDensity = typeof updater === 'function'
+      ? updater(preferences.density as MRT_DensityState)
+      : updater;
+    updateDensity(newDensity);
+  };
+
   const table = useMaterialReactTable({
     columns: tableColumns,
-    data,
+    data: isLoading && data.length === 0 ? [] : data, // Pass empty array during initial load
     enableRowSelection: false,
     enableColumnFilters: false,
     enableGlobalFilter: false,
+    enableHiding: true, // Enable column visibility toggle
+    enableDensityToggle: true, // Enable density toggle
     manualPagination: true,
     rowCount: totalCount,
     state: {
       isLoading,
       pagination,
+      columnVisibility: preferences.columnVisibility as MRT_VisibilityState,
+      sorting: preferences.sorting as MRT_SortingState,
+      density: preferences.density as MRT_DensityState,
     },
     onPaginationChange: (updater) => {
       const newPagination =
         typeof updater === 'function' ? updater(pagination) : updater;
       onPaginationChange(newPagination);
     },
+    onColumnVisibilityChange: handleColumnVisibilityChange,
+    onSortingChange: handleSortingChange,
+    onDensityChange: handleDensityChange,
     muiTableContainerProps: {
       sx: { maxHeight: '600px' },
     },
-    muiTableBodyRowProps: ({ row }) => ({
+    muiTableBodyRowProps: () => ({
       sx: {
         cursor: 'pointer',
         '&:hover': {
@@ -187,6 +284,11 @@ export const DynamicGrid: React.FC<DynamicGridProps> = ({
       },
     }),
   });
+
+  // Show skeleton while loading (after all hooks have been called)
+  if (isLoading && data.length === 0) {
+    return <TableSkeleton columns={columns} rowCount={pagination.pageSize} />;
+  }
 
   return <MaterialReactTable table={table} />;
 };

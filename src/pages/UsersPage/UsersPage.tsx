@@ -13,8 +13,8 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { useSnackbar } from 'notistack';
-import { DynamicGrid, UserActions, ErrorAlert } from '@/components';
-import { useUsers, useUpdateUserStatus, useDebounce, useInvalidateUsersCache } from '@/hooks';
+import { DynamicGrid, UserActions, ErrorAlert, OfflineBanner, OfflinePage } from '@/components';
+import { useUsers, useUpdateUserStatus, useDebounce, useInvalidateUsersCache, useNetworkStatus, isNetworkError } from '@/hooks';
 import { userColumnMetadata } from '@/utils';
 import type { MRT_PaginationState } from 'material-react-table';
 import type { User, ColumnMetadata } from '@/types';
@@ -46,6 +46,7 @@ import type { User, ColumnMetadata } from '@/types';
 export const UsersPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { enqueueSnackbar } = useSnackbar();
+  const { isOffline } = useNetworkStatus();
 
   // Initialize state from URL params (read once on mount)
   const [searchQuery, setSearchQuery] = useState(() => {
@@ -125,6 +126,15 @@ export const UsersPage: React.FC = () => {
   const { invalidateAll } = useInvalidateUsersCache();
 
   const handleToggleStatus = (userId: string, newStatus: 'active' | 'inactive') => {
+    // Check if user is offline before attempting the action
+    if (isOffline) {
+      enqueueSnackbar('No internet connection. Please check your network and try again.', {
+        variant: 'warning',
+        autoHideDuration: 4000,
+      });
+      return;
+    }
+
     updateStatus(
       { userId, status: newStatus },
       {
@@ -133,8 +143,18 @@ export const UsersPage: React.FC = () => {
           // FIX: Invalidate queries to refresh the table
           invalidateAll();
         },
-        onError: () => {
-          enqueueSnackbar('Failed to update user status', { variant: 'error' });
+        onError: (error) => {
+          // Check if it's a network error
+          if (isNetworkError(error)) {
+            enqueueSnackbar('No internet connection. Please check your network and try again.', {
+              variant: 'warning',
+              autoHideDuration: 4000,
+            });
+          } else {
+            enqueueSnackbar('Failed to update user status. Please try again.', {
+              variant: 'error',
+            });
+          }
         },
       }
     );
@@ -186,9 +206,22 @@ export const UsersPage: React.FC = () => {
 
   // Error state with retry functionality
   if (error) {
-    const isNetworkError = error.message.includes('Network') ||
-      error.message.includes('fetch') ||
-      error.message.includes('Failed to fetch');
+    const networkError = isNetworkError(error) || isOffline;
+
+    // Show offline page if user is offline or network error occurred
+    if (networkError) {
+      return (
+        <Box>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Users
+          </Typography>
+          <OfflinePage
+            onRetry={handleRetry}
+            message="Unable to load users. Please check your internet connection and try again."
+          />
+        </Box>
+      );
+    }
 
     return (
       <Box>
@@ -196,12 +229,8 @@ export const UsersPage: React.FC = () => {
           Users
         </Typography>
         <ErrorAlert
-          title={isNetworkError ? 'Connection Error' : 'Failed to Load Users'}
-          message={
-            isNetworkError
-              ? 'Unable to connect to the server. Please check your internet connection and try again.'
-              : `Something went wrong while loading users: ${error.message}`
-          }
+          title="Failed to Load Users"
+          message={`Something went wrong while loading users: ${error.message}`}
           onRetry={handleRetry}
           showRetry={true}
         />
@@ -211,6 +240,9 @@ export const UsersPage: React.FC = () => {
 
   return (
     <Box>
+      {/* Offline Banner - shows when user loses connection */}
+      <OfflineBanner isOffline={isOffline} />
+
       {/* Page Header */}
       <Typography variant="h4" component="h1" gutterBottom>
         Users

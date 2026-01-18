@@ -6,9 +6,12 @@ import {
   Paper,
   Alert,
   AlertTitle,
+  Snackbar,
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import WifiOffIcon from '@mui/icons-material/WifiOff';
+import SignalWifiOffIcon from '@mui/icons-material/SignalWifiOff';
 
 interface Props {
   children: ReactNode;
@@ -195,14 +198,14 @@ export const NetworkError: React.FC<NetworkErrorProps> = ({ onRetry }) => {
         p: 3,
       }}
     >
-      <ErrorOutlineIcon
+      <SignalWifiOffIcon
         sx={{ fontSize: 48, color: 'warning.main', mb: 2 }}
       />
       <Typography variant="h6" gutterBottom>
-        Connection Error
+        No Internet Connection
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2, textAlign: 'center' }}>
-        Unable to connect to the server. Please check your internet connection and try again.
+        You appear to be offline. Please check your internet connection and try again.
       </Typography>
       <Button
         variant="outlined"
@@ -212,6 +215,100 @@ export const NetworkError: React.FC<NetworkErrorProps> = ({ onRetry }) => {
       >
         Retry Connection
       </Button>
+    </Box>
+  );
+};
+
+/**
+ * Offline Banner Component
+ *
+ * Shows a persistent banner when the user is offline.
+ * Automatically hides when connection is restored.
+ */
+interface OfflineBannerProps {
+  isOffline: boolean;
+}
+
+export const OfflineBanner: React.FC<OfflineBannerProps> = ({ isOffline }) => {
+  return (
+    <Snackbar
+      open={isOffline}
+      anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+    >
+      <Alert
+        severity="warning"
+        icon={<WifiOffIcon />}
+        sx={{
+          width: '100%',
+          alignItems: 'center',
+          '& .MuiAlert-message': {
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+          },
+        }}
+      >
+        <Typography variant="body2" fontWeight={500}>
+          No internet connection. Some features may not work.
+        </Typography>
+      </Alert>
+    </Snackbar>
+  );
+};
+
+/**
+ * Offline Full Page Component
+ *
+ * Shows a full page message when user is offline and data couldn't be loaded.
+ */
+interface OfflinePageProps {
+  onRetry: () => void;
+  message?: string;
+}
+
+export const OfflinePage: React.FC<OfflinePageProps> = ({
+  onRetry,
+  message = 'You are currently offline. Please check your internet connection.',
+}) => {
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '400px',
+        p: 3,
+      }}
+    >
+      <Paper
+        elevation={0}
+        sx={{
+          p: 4,
+          maxWidth: 400,
+          textAlign: 'center',
+          backgroundColor: 'transparent',
+        }}
+      >
+        <SignalWifiOffIcon
+          sx={{ fontSize: 80, color: 'text.secondary', mb: 2 }}
+        />
+        <Typography variant="h5" gutterBottom color="text.primary">
+          You're Offline
+        </Typography>
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+          {message}
+        </Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<RefreshIcon />}
+          onClick={onRetry}
+          size="large"
+        >
+          Try Again
+        </Button>
+      </Paper>
     </Box>
   );
 };

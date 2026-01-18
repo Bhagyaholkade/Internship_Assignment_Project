@@ -2,10 +2,6 @@
 
 A pre-built admin dashboard with **intentional bugs** and **incomplete features** for you to fix and complete.
 
-## Live Demo
-
-**[View Live Demo](https://vegam-solutions-assignment.vercel.app)**
-
 ## Quick Start
 
 ```bash
@@ -57,9 +53,35 @@ src/
 └── routes.tsx
 ```
 
+## Your Tasks
+
+See ASSIGNMENT.md for detailed instructions.
+
+### Summary
+
+| Task Type | Count | Skills Tested |
+|-----------|-------|---------------|
+| Bug Fixes | 3 | Debugging, React Query, MRT |
+| Complete Features | 3 | Pattern following |
+| Build New | 2 | Independent thinking |
+
+### Submission
+
+1. Fix all bugs and complete features
+2. Make separate commits for each fix/feature
+3. Update this README with your changes
+4. Deploy to Vercel/Netlify
+5. Submit repo link + live demo
+
+**Live Demo:** https://vegam-solutions-assignment.vercel.app
+
 ---
 
-## Changes Made
+## 🚀 Submission Details
+
+
+
+✅ Submission Checklist
 
 ### Part 1: Bug Fixes (Required) ✅
 

@@ -9,16 +9,16 @@ A pre-built admin dashboard with **intentional bugs** and **incomplete features*
 ## Screenshots
 
 ### Dashboard View
-![Dashboard](./Dashboard.png)
+![Dashboard](./screenshots/Dashboard.png)
 
 ### Deactivation Confirmation Dialog
-![Deactivating](./Deactivating.png)
+![Deactivating](./screenshots/Deactivating.png)
 
 ### Offline Detection
-![Offline](./offline.png)
+![Offline](./screenshots/offline.png)
 
 ### Offline Error Message
-![Offline Message](./Offline_msg.png)
+![Offline Message](./screenshots/Offline_msg.png)
 
 ---
 

@@ -79,7 +79,7 @@ See ASSIGNMENT.md for detailed instructions.
 
 ## 🚀 Submission Details
 
-
+**Live Demo:** https://vegam-solutions-assignment.vercel.app
 
 ✅ Submission Checklist
 

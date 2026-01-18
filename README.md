@@ -73,7 +73,6 @@ See ASSIGNMENT.md for detailed instructions.
 4. Deploy to Vercel/Netlify
 5. Submit repo link + live demo
 
-**Live Demo:** https://vegam-solutions-assignment.vercel.app
 
 ---
 
@@ -81,7 +80,7 @@ See ASSIGNMENT.md for detailed instructions.
 
 **Live Demo:** https://vegam-solutions-assignment.vercel.app
 
-✅ Submission Checklist
+## ✅ Submission Checklist
 
 ### Part 1: Bug Fixes (Required) ✅
 

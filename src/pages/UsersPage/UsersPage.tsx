@@ -10,6 +10,7 @@ import {
   MenuItem,
   Paper,
   InputAdornment,
+  Button,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { useSnackbar } from 'notistack';
@@ -130,7 +131,16 @@ export const UsersPage: React.FC = () => {
     if (isOffline) {
       enqueueSnackbar('No internet connection. Please check your network and try again.', {
         variant: 'warning',
-        autoHideDuration: 4000,
+        autoHideDuration: 6000,
+        action: (
+          <Button
+            color="inherit"
+            size="small"
+            onClick={() => handleToggleStatus(userId, newStatus)}
+          >
+            Retry
+          </Button>
+        ),
       });
       return;
     }
@@ -148,11 +158,30 @@ export const UsersPage: React.FC = () => {
           if (isNetworkError(error)) {
             enqueueSnackbar('No internet connection. Please check your network and try again.', {
               variant: 'warning',
-              autoHideDuration: 4000,
+              autoHideDuration: 6000,
+              action: (
+                <Button
+                  color="inherit"
+                  size="small"
+                  onClick={() => handleToggleStatus(userId, newStatus)}
+                >
+                  Retry
+                </Button>
+              ),
             });
           } else {
             enqueueSnackbar('Failed to update user status. Please try again.', {
               variant: 'error',
+              autoHideDuration: 6000,
+              action: (
+                <Button
+                  color="inherit"
+                  size="small"
+                  onClick={() => handleToggleStatus(userId, newStatus)}
+                >
+                  Retry
+                </Button>
+              ),
             });
           }
         },

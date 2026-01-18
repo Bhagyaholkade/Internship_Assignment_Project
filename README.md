@@ -6,22 +6,6 @@ A pre-built admin dashboard with **intentional bugs** and **incomplete features*
 
 **[View Live Demo](https://vegam-solutions-assignment.vercel.app)**
 
-## Screenshots
-
-### Dashboard View
-![Dashboard](./screenshots/Dashboard.png)
-
-### Deactivation Confirmation Dialog
-![Deactivating](./screenshots/Deactivating.png)
-
-### Offline Detection
-![Offline](./screenshots/offline.png)
-
-### Offline Error Message
-![Offline Message](./screenshots/Offline_msg.png)
-
----
-
 ## Quick Start
 
 ```bash
@@ -127,3 +111,17 @@ src/
 - [x] (Bonus) localStorage persistence
 - [x] (Bonus) Unit tests (23 tests)
 - [x] (Bonus) Role-based UI with icons
+
+---
+
+## Screenshots
+
+| Dashboard (Users Page) | User Actions |
+|:---:|:---:|
+| ![Dashboard](./screenshots/Dashboard.png) | ![Deactivating](./screenshots/Deactivating.png) |
+| *Main User Grid with Search & Filters* | *Active/Inactive Status Toggle with Confirmation* |
+
+| Offline Detection | Offline Error Message |
+|:---:|:---:|
+| ![Offline](./screenshots/offline.png) | ![Offline Message](./screenshots/Offline_msg.png) |
+| *Banner when user goes offline* | *Full page error with retry option* |

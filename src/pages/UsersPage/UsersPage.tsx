@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   Box,
@@ -67,13 +67,18 @@ export const UsersPage: React.FC = () => {
   // Debounce search query to prevent API calls on every keystroke
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
+  // Track if this is initial mount to prevent resetting pagination on refresh
+  const isInitialMount = useRef(true);
+  const prevSearchQuery = useRef(debouncedSearchQuery);
+  const prevStatusFilter = useRef(statusFilter);
+
   // Sync state changes to URL
   useEffect(() => {
     const params = new URLSearchParams();
 
-    if (pagination.pageIndex > 0) {
-      params.set('page', String(pagination.pageIndex + 1));
-    }
+    // Always include page in URL for clarity (page=1 is default)
+    params.set('page', String(pagination.pageIndex + 1));
+
     if (pagination.pageSize !== 10) {
       params.set('pageSize', String(pagination.pageSize));
     }
@@ -87,9 +92,22 @@ export const UsersPage: React.FC = () => {
     setSearchParams(params, { replace: true });
   }, [pagination.pageIndex, pagination.pageSize, statusFilter, searchQuery, setSearchParams]);
 
-  // Reset to first page when debounced search query or status filter changes
+  // Reset to first page only when search query or status filter CHANGES (not on mount)
   useEffect(() => {
-    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    // Skip on initial mount - we want to preserve URL params
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      prevSearchQuery.current = debouncedSearchQuery;
+      prevStatusFilter.current = statusFilter;
+      return;
+    }
+
+    // Only reset pagination if search or filter actually changed
+    if (prevSearchQuery.current !== debouncedSearchQuery || prevStatusFilter.current !== statusFilter) {
+      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+      prevSearchQuery.current = debouncedSearchQuery;
+      prevStatusFilter.current = statusFilter;
+    }
   }, [debouncedSearchQuery, statusFilter]);
 
   // Fetch users with debounced search query

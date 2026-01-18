@@ -2,6 +2,26 @@
 
 A pre-built admin dashboard with **intentional bugs** and **incomplete features** for you to fix and complete.
 
+## Live Demo
+
+**[View Live Demo](https://vegam-solutions-assignment.vercel.app)**
+
+## Screenshots
+
+### Dashboard View
+![Dashboard](./Dashboard.png)
+
+### Deactivation Confirmation Dialog
+![Deactivating](./Deactivating.png)
+
+### Offline Detection
+![Offline](./offline.png)
+
+### Offline Error Message
+![Offline Message](./Offline_msg.png)
+
+---
+
 ## Quick Start
 
 ```bash
@@ -103,6 +123,7 @@ src/
 - [x] Error handling improved
 - [x] Separate git commits for each fix/feature
 - [x] README updated with changes
+- [x] Deployed to Vercel
 - [x] (Bonus) localStorage persistence
 - [x] (Bonus) Unit tests (23 tests)
 - [x] (Bonus) Role-based UI with icons

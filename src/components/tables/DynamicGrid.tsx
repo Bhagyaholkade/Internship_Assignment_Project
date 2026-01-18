@@ -11,6 +11,9 @@ import {
 import { Chip, Box, Skeleton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Tooltip } from '@mui/material';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import CreateIcon from '@mui/icons-material/Create';
+import PersonIcon from '@mui/icons-material/Person';
 import type { ColumnMetadata, User, Group } from '@/types';
 import { formatDate } from '@/utils';
 import { useTablePreferences } from '@/hooks';
@@ -81,6 +84,15 @@ const renderCellByType = (
         }
         if (name.includes('management')) {
           return <SupervisorAccountIcon sx={{ fontSize: 16, mr: 0.5 }} />;
+        }
+        if (name.includes('read only')) {
+          return <VisibilityIcon sx={{ fontSize: 16, mr: 0.5 }} />;
+        }
+        if (name.includes('content')) {
+          return <CreateIcon sx={{ fontSize: 16, mr: 0.5 }} />;
+        }
+        if (name.includes('standard')) {
+          return <PersonIcon sx={{ fontSize: 16, mr: 0.5 }} />;
         }
         return null;
       };
